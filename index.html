@@ -68,7 +68,7 @@
     <div class="modal fade" id="addShopModal" tabindex="-1" aria-labelledby="addShopModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold text-primary" id="addShopModalLabel">➕ 新增我的私房愛店</h5>
+                <h5 class="modal-title fw-bold text-primary" id="addShopModalLabel">新增店家</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
@@ -81,11 +81,11 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col">
-                            <label class="form-label small fw-bold">緯度 (Lat)</label>
+                            <label class="form-label small fw-bold">緯度</label>
                             <input type="number" id="shop-lat" class="form-control" step="any" required placeholder="25.0465">
                         </div>
                         <div class="col">
-                            <label class="form-label small fw-bold">經度 (Lng)</label>
+                            <label class="form-label small fw-bold">經度</label>
                             <input type="number" id="shop-lng" class="form-control" step="any" required placeholder="121.5160">
                         </div>
                     </div>
@@ -124,7 +124,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-danger" id="deleteShopModalLabel">🗑️ 刪除店家</h5>
+                    <h5 class="modal-title fw-bold text-danger" id="deleteShopModalLabel">刪除店家</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -187,11 +187,11 @@
                         <hr class="my-1">
                         <p class="mb-2 small text-dark">${shop.description}</p>
                         <a href="${gmapUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100 mb-2">
-                            📍 在 Google Maps 開啟
+                            在 Google Maps 開啟
                         </a>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill btn-edit-shop" data-index="${i}">✏️ 修改</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger flex-fill btn-delete-shop" data-index="${i}">🗑️ 刪除</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill btn-edit-shop" data-index="${i}">修改</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger flex-fill btn-delete-shop" data-index="${i}">刪除</button>
                         </div>
                     </div>
                 `;
