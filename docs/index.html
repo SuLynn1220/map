@@ -256,7 +256,7 @@
         $('#nav-add-shop').on('click', function() {
             $('#add-shop-form')[0].reset();
             $('#shop-edit-index').val('');
-            $('#addShopModalLabel').text('➕ 新增我的私房愛店');
+            $('#addShopModalLabel').text('新增我的私房愛店');
             $('#shop-submit-btn').text('儲存到地圖');
         });
 
@@ -274,7 +274,7 @@
             $('#shop-desc').val(shop.description);
             $('#shop-gmap').val(shop.googleMapUrl || '');
 
-            $('#addShopModalLabel').text('✏️ 修改店家資訊');
+            $('#addShopModalLabel').text('修改店家資訊');
             $('#shop-submit-btn').text('更新店家資訊');
 
             map.closePopup();
