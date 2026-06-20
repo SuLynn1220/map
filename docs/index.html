@@ -21,6 +21,7 @@
             flex: 1; 
             display: flex; 
             height: calc(100vh - 56px); 
+            position: relative;
         }
         #sidebar { 
             width: 380px; 
@@ -40,6 +41,23 @@
         .nav-link:hover {
             color: #d4a373 !important;
         }
+        #map-filter-panel {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 1000;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 12px 14px;
+            width: 240px;
+        }
+        #map-filter-panel .form-label {
+            margin-bottom: 2px;
+        }
+        #map-filter-reset {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -55,7 +73,7 @@
                         <a class="nav-link active" aria-current="page" href="#">地圖</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">收藏名單</a>
+                        <a class="nav-link" href="list.html">收藏名單</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#addShopModal" id="nav-add-shop">新增店家</a>
@@ -68,7 +86,7 @@
     <div class="modal fade" id="addShopModal" tabindex="-1" aria-labelledby="addShopModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold text-primary" id="addShopModalLabel">新增店家</h5>
+                <h5 class="modal-title fw-bold text-primary" id="addShopModalLabel">新增私房愛店</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
@@ -140,6 +158,26 @@
 
     <div id="main-container">
 
+        <div id="map-filter-panel">
+            <div class="mb-2">
+                <label class="form-label small fw-bold">店名關鍵字</label>
+                <input type="text" id="map-filter-name" class="form-control form-control-sm" placeholder="搜尋店名...">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-bold">標籤關鍵字</label>
+                <input type="text" id="map-filter-tag" class="form-control form-control-sm" placeholder="搜尋標籤...">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-bold">餐期分類</label>
+                <select id="map-filter-category" class="form-select form-select-sm">
+                    <option value="all">全部</option>
+                    <option value="meal">正餐午晚餐</option>
+                    <option value="dessert">下午茶甜點</option>
+                </select>
+            </div>
+            <button id="map-filter-reset" class="btn btn-sm btn-outline-secondary w-100">清除篩選</button>
+        </div>
+
         <div id="map"></div>
     </div>
 
@@ -152,7 +190,8 @@
         let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
 
         // --- 2. 初始化地圖 ---
-        const map = L.map('map').setView([25.0478, 121.5170], 15);
+        const map = L.map('map', { zoomControl: false }).setView([25.0478, 121.5170], 15);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -163,9 +202,20 @@
             // Step 1: 把舊的地標全部拿橡皮擦擦掉！
             markerGroup.clearLayers();
 
-            // Step 2: 把每一家店都畫上去（已移除篩選功能，全部顯示）
+            // Step 2: 抓取目前篩選面板上的條件
+            const nameKeyword = $('#map-filter-name').val().trim().toLowerCase();
+            const tagKeyword = $('#map-filter-tag').val().trim().toLowerCase();
+            const category = $('#map-filter-category').val();
+
+            // Step 3: 把符合篩選條件的店畫上去
             for (let i = 0; i < myShops.length; i++) {
                 const shop = myShops[i];
+
+                const matchName = !nameKeyword || shop.name.toLowerCase().includes(nameKeyword);
+                const matchTag = !tagKeyword || shop.tags.some(t => t.toLowerCase().includes(tagKeyword));
+                const matchCategory = category === 'all' || shop.category === category;
+
+                if (!(matchName && matchTag && matchCategory)) continue;
 
                 // 在該店家的經緯度上建立一支旗子 (Marker)
                 const marker = L.marker([shop.lat, shop.lng]);
@@ -304,6 +354,16 @@
             $('#deleteShopModal').modal('hide');
         });
 
+        // --- 4f. 地圖篩選面板：輸入/選擇即時套用篩選 ---
+        $('#map-filter-name, #map-filter-tag').on('input', renderMap);
+        $('#map-filter-category').on('change', renderMap);
+        $('#map-filter-reset').on('click', function() {
+            $('#map-filter-name').val('');
+            $('#map-filter-tag').val('');
+            $('#map-filter-category').val('all');
+            renderMap();
+        });
+
         // --- 5. 【進階功能】匯出 JSON 檔案 ---
         $('#btn-export').on('click', function() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myShops, null, 2));
@@ -315,8 +375,33 @@
             downloadAnchor.remove();
         });
 
-        // 頁面載入完成後第一次繪製
-        $(document).ready(function() { renderMap(); });
+        // 頁面載入完成後第一次繪製，並檢查網址參數是否要定位到特定店家
+        // （從收藏名單頁點「看地圖」會帶上 ?lat=...&lng=... 過來）
+        $(document).ready(function() {
+            renderMap();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetLat = parseFloat(urlParams.get('lat'));
+            const targetLng = parseFloat(urlParams.get('lng'));
+
+            if (!isNaN(targetLat) && !isNaN(targetLng)) {
+                // 清空篩選條件，確保目標店家一定會被畫出來
+                $('#map-filter-name').val('');
+                $('#map-filter-tag').val('');
+                $('#map-filter-category').val('all');
+                renderMap();
+
+                map.flyTo([targetLat, targetLng], 17, { duration: 1.2 });
+                map.once('moveend', function() {
+                    markerGroup.eachLayer(function(marker) {
+                        const pos = marker.getLatLng();
+                        if (pos.lat === targetLat && pos.lng === targetLng) {
+                            marker.openPopup();
+                        }
+                    });
+                });
+            }
+        });
     </script>
 </body>
 </html>
