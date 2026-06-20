@@ -171,8 +171,8 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">甜點細項標籤（多個用逗號隔開）</label>
-                            <input type="text" id="shop-tags" class="form-control" placeholder="布丁, 咖啡, 蛋糕">
+                            <label class="form-label small fw-bold">甜點細項標籤（多個用空白隔開）</label>
+                            <input type="text" id="shop-tags" class="form-control" placeholder="布丁 咖啡 蛋糕">
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">私房心得</label>
@@ -295,7 +295,7 @@
             $('#shop-lat').val(shop.lat);
             $('#shop-lng').val(shop.lng);
             $('#shop-category').val(shop.category);
-            $('#shop-tags').val(shop.tags.join(', '));
+            $('#shop-tags').val(shop.tags.join(' '));
             $('#shop-desc').val(shop.description);
             $('#shop-gmap').val(shop.googleMapUrl || '');
 
@@ -313,7 +313,7 @@
             const lng = parseFloat($('#shop-lng').val());
             const category = $('#shop-category').val();
             const tagsInput = $('#shop-tags').val();
-            const tags = tagsInput ? tagsInput.replace(/，/g, ',').split(',').map(t => t.trim()).filter(Boolean) : [];
+            const tags = tagsInput ? tagsInput.trim().split(/\s+/).filter(Boolean) : [];
             const description = $('#shop-desc').val();
             const googleMapUrl = $('#shop-gmap').val().trim();
 
