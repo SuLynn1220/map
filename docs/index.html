@@ -186,10 +186,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 從 localStorage 讀取資料，如果沒有資料，就用空陣列起步
+        // 從 localStorage 讀取資料 如果沒有資料就用空陣列起步
         let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
 
-        // --- 2. 初始化地圖 ---
+        // 2. 初始化地圖
         const map = L.map('map', { zoomControl: false }).setView([25.0478, 121.5170], 15);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -197,7 +197,7 @@
         }).addTo(map);
         let markerGroup = L.layerGroup().addTo(map);
 
-        // --- 3. 地圖渲染功能 ---
+        // 3. 地圖渲染功能
         function renderMap() {
             // Step 1: 把舊的地標全部拿橡皮擦擦掉！
             markerGroup.clearLayers();
@@ -251,7 +251,7 @@
             }
         }
 
-        // --- 4. 【核心功能】監聽表單送出（新增 / 修改店家共用此表單） ---
+        // 4.【核心功能】監聽表單送出（新增 / 修改店家共用此表單）
         $('#add-shop-form').on('submit', function(e) {
             e.preventDefault(); // 防止表單重整網頁
 
@@ -283,7 +283,7 @@
             // 重新渲染地圖
             renderMap();
 
-            // 💡 利用 jQuery 叫 Bootstrap 把彈出方框關閉
+            // 利用 jQuery 叫 Bootstrap 把彈出方框關閉
             $('#addShopModal').modal('hide');
 
             // 清空表單輸入欄位與編輯狀態
@@ -302,7 +302,7 @@
             });
         });
 
-        // --- 4b. 開啟「新增」modal 時，確保表單回到新增模式（清空、標題還原） ---
+        // 開啟「新增」modal 時，確保表單回到新增模式（清空、標題還原）
         $('#nav-add-shop').on('click', function() {
             $('#add-shop-form')[0].reset();
             $('#shop-edit-index').val('');
@@ -310,7 +310,7 @@
             $('#shop-submit-btn').text('儲存到地圖');
         });
 
-        // --- 4c. 點擊圖釘 popup 裡的「修改」按鈕：把該店資料填回表單，切換成修改模式 ---
+        // 點擊圖釘 popup 裡的「修改」按鈕：把該店資料填回表單，切換成修改模式 
         $(document).on('click', '.btn-edit-shop', function() {
             const index = parseInt($(this).data('index'), 10);
             const shop = myShops[index];
@@ -331,7 +331,7 @@
             $('#addShopModal').modal('show');
         });
 
-        // --- 4d. 點擊圖釘 popup 裡的「刪除」按鈕：先記住要刪哪一筆，跳出確認視窗 ---
+        // 點擊圖釘 popup 裡的「刪除」按鈕：先記住要刪哪一筆，跳出確認視窗
         let pendingDeleteIndex = null;
         $(document).on('click', '.btn-delete-shop', function() {
             const index = parseInt($(this).data('index'), 10);
@@ -342,7 +342,7 @@
             $('#deleteShopModal').modal('show');
         });
 
-        // --- 4e. 確認刪除按鈕：真正從陣列移除該店家並更新地圖 ---
+        // 確認刪除按鈕：真正從陣列移除該店家並更新地圖
         $('#confirm-delete-btn').on('click', function() {
             if (pendingDeleteIndex === null) return;
 
@@ -354,7 +354,7 @@
             $('#deleteShopModal').modal('hide');
         });
 
-        // --- 4f. 地圖篩選面板：輸入/選擇即時套用篩選 ---
+        // 地圖篩選面板：輸入/選擇即時套用篩選
         $('#map-filter-name, #map-filter-tag').on('input', renderMap);
         $('#map-filter-category').on('change', renderMap);
         $('#map-filter-reset').on('click', function() {
@@ -364,7 +364,7 @@
             renderMap();
         });
 
-        // --- 5. 【進階功能】匯出 JSON 檔案 ---
+        // 5.【進階功能】匯出 JSON 檔案
         $('#btn-export').on('click', function() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myShops, null, 2));
             const downloadAnchor = document.createElement('a');

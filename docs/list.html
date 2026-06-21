@@ -218,7 +218,7 @@
         // 從 localStorage 讀取資料（與 index.html 共用同一份資料）
         let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
 
-        // --- 渲染表格 ---
+        // 展示表格
         function renderTable() {
             const nameKeyword = $('#filter-name').val().trim().toLowerCase();
             const tagKeyword = $('#filter-tag').val().trim().toLowerCase();
@@ -268,7 +268,7 @@
             $('#empty-state').toggle(visibleCount === 0);
         }
 
-        // --- 篩選器事件：輸入/選擇即時篩選 ---
+        // 篩選器：輸入/選擇即時篩選
         $('#filter-name, #filter-tag').on('input', renderTable);
         $('#filter-category').on('change', renderTable);
         $('#filter-reset').on('click', function() {
@@ -278,14 +278,14 @@
             renderTable();
         });
 
-        // --- 「看地圖」按鈕：帶經緯度跳回地圖頁並定位 ---
+        // 「看地圖」：帶經緯度跳回地圖頁並定位
         $(document).on('click', '.btn-locate-shop', function() {
             const index = parseInt($(this).data('index'), 10);
             const shop = myShops[index];
             window.location.href = `index.html?lat=${shop.lat}&lng=${shop.lng}`;
         });
 
-        // --- 「修改」按鈕：把資料填回表單並開啟 modal ---
+        // 「修改」：把資料填回表單並開啟 modal
         $(document).on('click', '.btn-edit-shop', function() {
             const index = parseInt($(this).data('index'), 10);
             const shop = myShops[index];
@@ -302,7 +302,7 @@
             $('#editShopModal').modal('show');
         });
 
-        // --- 修改表單送出：覆蓋原本那一筆資料 ---
+        // 修改表單送出：覆蓋原本那一筆資料
         $('#edit-shop-form').on('submit', function(e) {
             e.preventDefault();
 
@@ -324,7 +324,7 @@
             $('#editShopModal').modal('hide');
         });
 
-        // --- 「刪除」按鈕：跳出確認 modal ---
+        // 「刪除」：跳出確認 modal
         let pendingDeleteIndex = null;
         $(document).on('click', '.btn-delete-shop', function() {
             const index = parseInt($(this).data('index'), 10);
@@ -333,7 +333,7 @@
             $('#deleteShopModal').modal('show');
         });
 
-        // --- 確認刪除：真正從陣列移除 ---
+        // 確認刪除：真正從陣列移除
         $('#confirm-delete-btn').on('click', function() {
             if (pendingDeleteIndex === null) return;
 

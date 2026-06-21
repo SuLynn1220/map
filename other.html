@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍰 我的私房美食地圖（支援動態輸入）</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 全域樣式設定 */
+        body { 
+            font-family: 'Zen Old Mincho', serif; /* 套用明體字型 */
+            height: 100vh;                       /* 讓視窗高度填滿螢幕 */
+            display: flex;                       /* 使用 Flexbox 彈性排版 */
+            flex-direction: column;              /* 讓子元件由上至下垂直排列 (Navbar 在上，內容在下) */
+            overflow: hidden;                    /* 隱藏整個網頁的滾動條，避免畫面亂跑 */
+        }
+        /* 主內容區塊 (包含側邊欄與地圖) */
+        #main-container { 
+            flex: 1;                             /* 自動填滿扣除 Navbar 後的剩餘高度 */
+            display: flex;                       /* 使用 Flexbox 讓側邊欄與地圖左右並排 */
+            height: calc(100vh - 56px);          /* 計算高度：總高度減去 Navbar 的高度 (約56px) */
+        }
+        /* 側邊欄樣式 (目前 HTML 中尚未放入此 ID 的 div，但保留了樣式) */
+        #sidebar { 
+            width: 380px;                        /* 固定側邊欄寬度 380 像素 */
+            overflow-y: auto;                    /* 內容超出時自動顯示垂直滾動條 */
+            background-color: #fdfbf7;           /* 質感米白色背景 */
+        }
+        /* 地圖區塊樣式 */
+        #map { 
+            flex: 1;                             /* 自動填滿側邊欄以外的剩餘寬度 */
+            height: 100%;                        /* 高度填滿 main-container */
+        }
+        /* 自訂的深咖啡色背景類別 */
+        .color {
+            background-color: #4a3525;
+        }
+        /* 導覽列文字與商標顏色 (淺米色) */
+        .nav-link, .navbar-brand {
+            color: #f4f1ea !important;
+        }
+        /* 滑鼠懸停在導覽列選項時的顏色 (焦糖色) */
+        .nav-link:hover {
+            color: #d4a373 !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg color">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">收藏店家名單</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav ms-auto"> 
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">地圖</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">收藏名單</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#addShopModal" id="nav-add-shop">新增店家</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal fade" id="addShopModal" tabindex="-1" aria-labelledby="addShopModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary" id="addShopModalLabel">新增店家</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form id="add-shop-form">
+                    <input type="hidden" id="shop-edit-index" value="">
+                    
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">店名</label>
+                            <input type="text" id="shop-name" class="form-control" required placeholder="例如：昭和喫茶店">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">緯度</label>
+                                <input type="number" id="shop-lat" class="form-control" step="any" required placeholder="25.0465">
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">經度</label>
+                                <input type="number" id="shop-lng" class="form-control" step="any" required placeholder="121.5160">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">餐期分類</label>
+                            <select id="shop-category" class="form-select">
+                                <option value="meal">正餐午晚餐</option>
+                                <option value="dessert">下午茶甜點</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">甜點細項標籤（多個用逗號隔開）</label>
+                            <input type="text" id="shop-tags" class="form-control" placeholder="布丁, 咖啡, 蛋糕">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">私房心得</label>
+                            <textarea id="shop-desc" class="form-control" rows="3" placeholder="推薦吃什麼？口感如何？"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Google Maps 連結（選填，留空會自動依經緯度產生）</label>
+                            <input type="url" id="shop-gmap" class="form-control" placeholder="https://maps.google.com/?q=...">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" id="shop-submit-btn" class="btn btn-primary">儲存到地圖</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteShopModal" tabindex="-1" aria-labelledby="deleteShopModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger" id="deleteShopModalLabel">刪除店家</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">確定要刪除「<strong id="delete-shop-name"></strong>」嗎？此動作無法復原。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" id="confirm-delete-btn" class="btn btn-danger">確認刪除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <div id="map"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> <script>
+        // --- 1. 資料初始化 ---
+        // 從瀏覽器的 localStorage 讀取先前儲存的 JSON 字串，並轉換回陣列。若無資料則初始化為空陣列 []
+        let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
+
+        // --- 2. 初始化地圖 ---
+        // 建立地圖物件並綁定到網頁的 #map 區塊，設定初始中心點為台北車站 [25.0478, 121.5170]，縮放層級為 15
+        const map = L.map('map').setView([25.0478, 121.5170], 15);
+        
+        // 載入 OpenStreetMap 的免費地圖磁磚圖層 (TileLayer) 並加到地圖中
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors' // 必須保留的版權宣告
+        }).addTo(map);
+        
+        // 建立一個圖層群組 (LayerGroup) 用來管理所有的地圖圖釘 (Marker)，並將它加到地圖上
+        let markerGroup = L.layerGroup().addTo(map);
+
+        // --- 3. 地圖渲染功能 ---
+        // 負責清空舊圖釘，並根據 myShops 陣列重新把所有店家畫上地圖
+        function renderMap() {
+            // Step 1: 把舊的地標全部拿橡皮擦擦掉，避免重疊重畫！
+            markerGroup.clearLayers();
+
+            // Step 2: 迴圈巡訪 myShops 陣列中的每家店
+            for (let i = 0; i < myShops.length; i++) {
+                const shop = myShops[i];
+
+                // 在該店家的經緯度上建立一個圖釘標記 (Marker)
+                const marker = L.marker([shop.lat, shop.lng]);
+
+                // 檢查是否有填寫 Google Maps 連結，若無填寫或全是空白，就用經緯度自動組合出一個預設連結
+                // (註：原程式碼中 `1{shop.lat}` 疑為 `尺度(例如1z)` 或 `$` 符號漏寫，通常會採用通用格式)
+                const gmapUrl = shop.googleMapUrl && shop.googleMapUrl.trim()
+                    ? shop.googleMapUrl
+                    : `https://www.google.com/maps?q=${shop.lat},${shop.lng}`;
+
+                // 動態組合出點擊圖釘時要彈出來的 HTML 氣泡窗內容 (Popup)
+                // 使用了 HTML5 data-* 屬性 (data-index="${i}") 來記錄這家店在陣列中的位置，以便後續點擊修改/刪除
+                const popupContent = `
+                    <div class="p-1">
+                        <h6 class="fw-bold mb-1">${shop.name}</h6>
+                        <span class="badge ${shop.category === 'meal' ? 'bg-success' : 'bg-danger'} mb-2">
+                            ${shop.category === 'meal' ? '正餐' : '甜點'}
+                        </span>
+                        <p class="text-muted small mb-1">標籤：${shop.tags.join(', ')}</p>
+                        <hr class="my-1">
+                        <p class="mb-2 small text-dark">${shop.description}</p>
+                        <a href="${gmapUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100 mb-2">
+                            在 Google Maps 開啟
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill btn-edit-shop" data-index="${i}">修改</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger flex-fill btn-delete-shop" data-index="${i}">刪除</button>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent); // 將 HTML 氣泡窗內容與該圖釘綁定
+                markerGroup.addLayer(marker);   // 將圖釘加入到負責管理的透明圖層群組中
+            }
+        }
+
+        // --- 4. 【核心功能】監聽表單送出（新增 / 修改店家共用此表單） ---
+        $('#add-shop-form').on('submit', function(e) {
+            e.preventDefault(); // 阻擋表單預設的重整網頁行為
+
+            // 抓取並收集輸入欄位當前的值
+            const name = $('#shop-name').val();
+            const lat = parseFloat($('#shop-lat').val());
+            const lng = parseFloat($('#shop-lng').val());
+            const category = $('#shop-category').val();
+            
+            // 處理標籤：先把全形逗號「，」取代成半形「,」，再用逗號分割成陣列，最後用 map 砍掉每個標籤前後的空白
+            const tagsInput = $('#shop-tags').val();
+            const tags = tagsInput ? tagsInput.replace(/，/g, ',').split(',').map(t => t.trim()) : [];
+            const description = $('#shop-desc').val();
+            const googleMapUrl = $('#shop-gmap').val().trim();
+
+            // 打包成一個全新的店家資料物件
+            const shopData = { name, lat, lng, category, tags, description, googleMapUrl };
+
+            // 讀取隱藏欄位的值，判斷目前是新增還是修改模式
+            const editIndexRaw = $('#shop-edit-index').val();
+            const isEditMode = editIndexRaw !== ''; // 如果不為空，代表現在是「修改模式」
+
+            if (isEditMode) {
+                const editIndex = parseInt(editIndexRaw, 10);
+                myShops[editIndex] = shopData; // 【修改】用新資料覆蓋原本陣列中該索引位置的資料
+            } else {
+                myShops.push(shopData); // 【新增】將新物件直接推入陣列的尾端
+            }
+            
+            // 將更新後的最新資料陣列轉成 JSON 字串，存回瀏覽器的 localStorage 中持久保存
+            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops));
+
+            // 重新渲染地圖上的所有圖釘
+            renderMap();
+
+            // 利用 jQuery 呼叫 Bootstrap 的方法把彈出方框 (Modal) 隱藏關閉
+            $('#addShopModal').modal('hide');
+
+            // 表單重設：清空所有欄位，並將隱藏的編輯 index 欄位清空，回歸預設狀態
+            this.reset();
+            $('#shop-edit-index').val('');
+
+            // 【視覺特效】地圖平滑飛行 (flyTo) 到剛剛新增/修改的店家經緯度，放大到層級 17，動畫時間 1.2 秒
+            map.flyTo([lat, lng], 17, { duration: 1.2 });
+            
+            // 監聽地圖飛行結束的事件 (once 代表只執行一次)
+            map.once('moveend', function() {
+                // 巡訪地圖上的所有圖釘，找到經緯度剛好符合的那一支，並自動把它點開彈出氣泡窗
+                markerGroup.eachLayer(function(marker) {
+                    const pos = marker.getLatLng();
+                    if (pos.lat === lat && pos.lng === lng) {
+                        marker.openPopup();
+                    }
+                });
+            });
+        });
+
+        // --- 4b. 點擊 Navbar 的「新增店家」：確保表單切換為新增狀態（清空、標題還原） ---
+        $('#nav-add-shop').on('click', function() {
+            $('#add-shop-form')[0].reset();       // 清空表單文字
+            $('#shop-edit-index').val('');         // 清空編輯索引
+            $('#addShopModalLabel').text('新增我的私房愛店'); // 還原視窗標題
+            $('#shop-submit-btn').text('儲存到地圖');     // 還原按鈕文字
+        });
+
+        // --- 4c. 點擊圖釘氣泡窗裡的「修改」按鈕 ---
+        // 因為氣泡窗是後來動態產生的，所以必須使用事件代理 (Event Delegation) 監聽 document
+        $(document).on('click', '.btn-edit-shop', function() {
+            const index = parseInt($(this).data('index'), 10); // 取出按鈕上綁定的索引值
+            const shop = myShops[index];                       // 從陣列中拿到該筆店家的原始資料
+
+            // 將店家的舊資料一一塞回表單欄位中，好讓使用者進行修改
+            $('#shop-edit-index').val(index);
+            $('#shop-name').val(shop.name);
+            $('#shop-lat').val(shop.lat);
+            $('#shop-lng').val(shop.lng);
+            $('#shop-category').val(shop.category);
+            $('#shop-tags').val(shop.tags.join(', ')); // 陣列轉回用逗號隔開的字串
+            $('#shop-desc').val(shop.description);
+            $('#shop-gmap').val(shop.googleMapUrl || '');
+
+            // 將彈出視窗改成「修改模式」的文字
+            $('#addShopModalLabel').text('修改店家資訊');
+            $('#shop-submit-btn').text('更新店家資訊');
+
+            map.closePopup();               // 關閉目前地圖上的氣泡窗
+            $('#addShopModal').modal('show'); // 叫出修改表單的彈出視窗
+        });
+
+        // --- 4d. 點擊圖釘氣泡窗裡的「刪除」按鈕 ---
+        let pendingDeleteIndex = null; // 建立全域變數，暫存「即將被刪除」的店家索引值
+        $(document).on('click', '.btn-delete-shop', function() {
+            const index = parseInt($(this).data('index'), 10); // 拿到點擊的索引值
+            pendingDeleteIndex = index;                         // 暫存起來
+            $('#delete-shop-name').text(myShops[index].name);   // 在確認刪除的視窗中顯示該店名
+
+            map.closePopup();                  // 關閉地圖氣泡窗
+            $('#deleteShopModal').modal('show'); // 彈出「確認刪除」的詢問視窗
+        });
+
+        // --- 4e. 在確認刪除視窗中，點擊「確認刪除」按鈕 ---
+        $('#confirm-delete-btn').on('click', function() {
+            if (pendingDeleteIndex === null) return; // 防呆機制：如果沒有指定索引則不執行
+
+            myShops.splice(pendingDeleteIndex, 1); // 使用 splice 從 myShops 陣列中移除該筆資料
+            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops)); // 同步更新 localStorage 
+            renderMap(); // 重新繪製地圖（該圖釘就會消失）
+
+            pendingDeleteIndex = null;              // 重設暫存變數
+            $('#deleteShopModal').modal('hide');    // 隱藏確認刪除的彈出視窗
+        });
+
+        // --- 5. 【進階功能】匯出 JSON 檔案 ---
+        // (註：網頁中目前沒有 #btn-export 按鈕，此處為預留功能)
+        $('#btn-export').on('click', function() {
+            // 將陣列轉成 JSON 字串，並轉換成瀏覽器可下載的資料 URI 格式 (縮排 2 格空白)
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myShops, null, 2));
+            const downloadAnchor = document.createElement('a'); // 動態建立一個 <a> 標籤
+            downloadAnchor.setAttribute("href", dataStr);       // 設定下載網址
+            downloadAnchor.setAttribute("download", "shops.json"); // 設定下載後的檔案名稱
+            document.body.appendChild(downloadAnchor);          // 將標籤塞入網頁
+            downloadAnchor.click();                             // 模擬點擊觸發下載
+            downloadAnchor.remove();                            // 下載完後立即移除該標籤
+        });
+
+        // --- 6. 網頁初始載入 ---
+        // 當瀏覽器把 HTML 與相依程式庫完全載入完畢 (DOM Ready) 後，立刻執行第一次地圖圖釘繪製
+        $(document).ready(function() { renderMap(); });
+    </script>
+</body>
+</html>
