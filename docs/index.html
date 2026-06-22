@@ -10,6 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        .bg-purple {
+            background-color: #9b79db !important;
+        }
+        .bg-red {
+            background-color: #e185a4 !important;
+        }
+        .bg-blue {
+            background-color: #4ebfc7 !important;
+        }
         body { 
             font-family: 'Zen Old Mincho', serif;
             height: 100vh; 
@@ -110,16 +119,17 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold">餐期分類</label>
                         <select id="shop-category" class="form-select">
-                            <option value="meal">正餐午晚餐</option>
-                            <option value="dessert">下午茶甜點</option>
+                            <option value="dinner">早午晚餐</option>
+                            <option value="nightSnack">消夜</option>
+                            <option value="dessert">甜點</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">甜點細項標籤（多個用空白隔開）</label>
+                        <label class="form-label small fw-bold">細項標籤（多個用空白隔開）</label>
                         <input type="text" id="shop-tags" class="form-control" placeholder="布丁 咖啡 蛋糕">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">私房心得</label>
+                        <label class="form-label small fw-bold">餐後心得</label>
                         <textarea id="shop-desc" class="form-control" rows="3" placeholder="推薦吃什麼？口感如何？"></textarea>
                     </div>
                     <div class="mb-3">
@@ -171,8 +181,9 @@
                 <label class="form-label small fw-bold">餐期分類</label>
                 <select id="map-filter-category" class="form-select form-select-sm">
                     <option value="all">全部</option>
-                    <option value="meal">正餐午晚餐</option>
-                    <option value="dessert">下午茶甜點</option>
+                    <option value="dinner">早午晚餐</option>
+                    <option value="nightSnack">消夜</option>
+                    <option value="dessert">甜點</option>
                 </select>
             </div>
             <button id="map-filter-reset" class="btn btn-sm btn-outline-secondary w-100">清除篩選</button>
@@ -227,11 +238,19 @@
 
                 // 寫好點擊旗子時要彈出來的 HTML 氣泡窗內容
                 // data-index 記錄這家店在 myShops 陣列中的位置，供修改/刪除按鈕使用
+                let cate = '甜點';
+                if (shop.category === 'dinner') cate = '早午晚餐';
+                else if (shop.category === 'nightSnack') cate = '消夜';
+
+                let bg = 'bg-red';
+                if (shop.category === 'dinner') bg = 'bg-blue';
+                else if (shop.category === 'nightSnack') bg = 'bg-purple';
+
                 const popupContent = `
                     <div class="p-1">
                         <h6 class="fw-bold mb-1">${shop.name}</h6>
-                        <span class="badge ${shop.category === 'meal' ? 'bg-success' : 'bg-danger'} mb-2">
-                            ${shop.category === 'meal' ? '正餐' : '甜點'}
+                        <span class="badge ${bg} mb-2">
+                            ${cate}
                         </span>
                         <p class="text-muted small mb-1">標籤：${shop.tags.join(' ')}</p>
                         <hr class="my-1">

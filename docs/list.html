@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        .bg-purple {
+            background-color: #9b79db !important;
+        }
+        .bg-red {
+            background-color: #e185a4 !important;
+        }
+        .bg-blue {
+            background-color: #4ebfc7 !important;
+        }
         body {
             font-family: 'Zen Old Mincho', serif;
             background-color: #fdfbf7;
@@ -98,8 +107,9 @@
                 <label class="form-label small fw-bold mb-1">餐期分類</label>
                 <select id="filter-category" class="form-select form-select-sm">
                     <option value="all">全部</option>
-                    <option value="meal">正餐午晚餐</option>
-                    <option value="dessert">下午茶甜點</option>
+                    <option value="dinner">早午晚餐</option>
+                    <option value="nightSnack">消夜</option>
+                    <option value="dessert">甜點</option>
                 </select>
             </div>
             <div class="col-12 col-md-3">
@@ -166,8 +176,9 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold">餐期分類</label>
                             <select id="shop-category" class="form-select">
-                                <option value="meal">正餐午晚餐</option>
-                                <option value="dessert">下午茶甜點</option>
+                                <option value="dinner">早午晚餐</option>
+                                <option value="nightSnack">消夜</option>
+                                <option value="dessert">甜點</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -242,12 +253,17 @@
 
                 const tagsHtml = shop.tags.map(t => `<span class="badge tag-badge">${t}</span>`).join('');
 
+                let cateText = '甜點';
+                let cateBg = 'bg-red';
+                if (shop.category === 'dinner') { cateText = '早午晚餐'; cateBg = 'bg-blue'; }
+                else if (shop.category === 'nightSnack') { cateText = '消夜'; cateBg = 'bg-purple'; }
+
                 const row = `
                     <tr>
                         <td class="fw-bold" style="width: 16%;">${shop.name}</td>
                         <td style="width: 10%;">
-                            <span class="badge ${shop.category === 'meal' ? 'bg-success' : 'bg-danger'}">
-                                ${shop.category === 'meal' ? '正餐' : '甜點'}
+                            <span class="badge ${cateBg}">
+                                ${cateText}
                             </span>
                         </td>
                         <td style="width: 20%;">${tagsHtml || '<span class="text-muted small">—</span>'}</td>
