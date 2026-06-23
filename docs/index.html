@@ -200,13 +200,25 @@
         // 從 localStorage 讀取資料 如果沒有資料就用空陣列起步
         let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
 
-        // 2. 初始化地圖
-        const map = L.map('map', { zoomControl: false }).setView([25.0478, 121.5170], 15);
+        // 2. 初始化地圖（中心點設在三民高中）
+        const SANMIN_HS_COORDS = [25.08612732470081, 121.47320535305843];
+        const map = L.map('map', { zoomControl: false }).setView(SANMIN_HS_COORDS, 15);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         let markerGroup = L.layerGroup().addTo(map);
+
+        // 用紅色 divIcon 做出跟店家（預設藍色）不同顏色的圖釘，標示三民高中這個固定參考點
+        const redIcon = L.divIcon({
+            className: '',
+            html: '<div style="width:20px;height:20px;border-radius:50% 50% 50% 0;background:#dc3545;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);transform:rotate(-45deg);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 20]
+        });
+        L.marker(SANMIN_HS_COORDS, { icon: redIcon })
+            .bindPopup('<div class="p-1"><h6 class="fw-bold mb-0">三民高中</h6></div>')
+            .addTo(map); // 不放進 markerGroup，篩選時不會被清除
 
         // 3. 地圖渲染功能
         function renderMap() {
