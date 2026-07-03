@@ -222,7 +222,7 @@
 
         // 3. 地圖渲染功能
         function renderMap() {
-            // Step 1: 把舊的地標全部拿橡皮擦擦掉！
+            // Step 1: 把舊的地標全部拔除
             markerGroup.clearLayers();
 
             // Step 2: 抓取目前篩選面板上的條件
@@ -248,16 +248,16 @@
                     ? shop.googleMapUrl
                     : `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
 
-                // 寫好點擊旗子時要彈出來的 HTML 氣泡窗內容
-                // data-index 記錄這家店在 myShops 陣列中的位置，供修改/刪除按鈕使用
                 let cate = '甜點';
                 if (shop.category === 'dinner') cate = '早午晚餐';
                 else if (shop.category === 'nightSnack') cate = '消夜';
-
+                
                 let bg = 'bg-red';
                 if (shop.category === 'dinner') bg = 'bg-blue';
                 else if (shop.category === 'nightSnack') bg = 'bg-purple';
-
+                
+                // 寫好點擊旗子時要彈出來的 HTML 氣泡窗內容
+                // data-index 記錄這家店在 myShops 陣列中的位置，供修改/刪除按鈕使用
                 const popupContent = `
                     <div class="p-1">
                         <h6 class="fw-bold mb-1">${shop.name}</h6>
@@ -278,7 +278,7 @@
                 `;
 
                 marker.bindPopup(popupContent); // 綁定氣泡
-                markerGroup.addLayer(marker);   // 把這支旗子釘在透明畫布層上！
+                markerGroup.addLayer(marker);   // 把這支旗子釘在透明畫布層上
             }
         }
 
