@@ -395,17 +395,6 @@
             renderMap();
         });
 
-        // 5.【進階功能】匯出 JSON 檔案
-        $('#btn-export').on('click', function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myShops, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "shops.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        });
-
         // 頁面載入完成後第一次繪製，並檢查網址參數是否要定位到特定店家
         // （從收藏名單頁點「看地圖」會帶上 ?lat=...&lng=... 過來）
         $(document).ready(function() {
