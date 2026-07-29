@@ -198,7 +198,7 @@
 
     <script>
         // 從 localStorage 讀取資料 如果沒有資料就用空陣列起步
-        let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
+        let myShops = JSON.parse(localStorage.getItem('myMapData')) || [];
 
         // 2. 初始化地圖（中心點設在三民高中）
         const SANMIN_HS_COORDS = [25.08612732470081, 121.47320535305843];
@@ -309,7 +309,7 @@
             } else {
                 myShops.push(shopData); // 新增一筆到陣列尾端
             }
-            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops));
+            localStorage.setItem('myMapData', JSON.stringify(myShops));
 
             // 重新渲染地圖
             renderMap();
@@ -378,7 +378,7 @@
             if (pendingDeleteIndex === null) return;
 
             myShops.splice(pendingDeleteIndex, 1);
-            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops));
+            localStorage.setItem('myMapData', JSON.stringify(myShops));
             renderMap();
 
             pendingDeleteIndex = null;

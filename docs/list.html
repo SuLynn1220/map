@@ -223,7 +223,7 @@
 
     <script>
         // 從 localStorage 讀取資料（與 index.html 共用同一份資料）
-        let myShops = JSON.parse(localStorage.getItem('myGourmetMapData')) || [];
+        let myShops = JSON.parse(localStorage.getItem('myMapData')) || [];
 
         // 展示表格
         function renderTable() {
@@ -335,7 +335,7 @@
             const googleMapUrl = $('#shop-gmap').val().trim();
 
             myShops[editIndex] = { name, lat, lng, category, tags, description, googleMapUrl };
-            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops));
+            localStorage.setItem('myMapData', JSON.stringify(myShops));
 
             renderTable();
             $('#editShopModal').modal('hide');
@@ -355,7 +355,7 @@
             if (pendingDeleteIndex === null) return;
 
             myShops.splice(pendingDeleteIndex, 1);
-            localStorage.setItem('myGourmetMapData', JSON.stringify(myShops));
+            localStorage.setItem('myMapData', JSON.stringify(myShops));
             renderTable();
 
             pendingDeleteIndex = null;
